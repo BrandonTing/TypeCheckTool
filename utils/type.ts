@@ -383,8 +383,33 @@ export function getEffectivenessForType(atkType: Types, defType: Types): Effecti
     return typeAttackEffectivenessMap[atkType][defType]
 }
 
-export function getEffectivenessForPokemon(attackerTypes: Types[], defType: Types): number {
+function getEffectivenessOfTypeForPokemon(attackerType: Types, defenderType: Array<Types>): number {
+    return defenderType.reduce((prev, cur) => getEffectivenessForType(attackerType, cur) * prev, 1)
+}
+
+export function getEffectivenessOfTypesForPokemon(attackerTypes: Types[], defenderType: Array<Types>): number[] {
     return attackerTypes
-        .map(type => getEffectivenessForType(type, defType))
-        .reduce((prev, cur) => prev * cur, 1 as number);
+        .map(type => getEffectivenessOfTypeForPokemon(type, defenderType))
+}
+
+export function getMinEffectivenessForTeam(attackerType: Types, defenderTypes: Array<Array<Types>>): number {
+    let minEffectiveness = Infinity;
+    for (let i = 0; i < defenderTypes.length; i++) {
+        const effectiveness = getEffectivenessOfTypeForPokemon(attackerType, defenderTypes[i]);
+        if (effectiveness < minEffectiveness) {
+            minEffectiveness = effectiveness
+        }
+    }
+    return minEffectiveness
+}
+
+export function getMinEffectivenessOfTypesForTeam(attackerTypes: Array<Types>, defenderTypes: Array<Array<Types>>): number {
+    let minEffectiveness = Infinity;
+    for (let i = 0; i < defenderTypes.length; i++) {
+        const effectiveness = Math.max(...getEffectivenessOfTypesForPokemon(attackerTypes, defenderTypes[i]));
+        if (effectiveness < minEffectiveness) {
+            minEffectiveness = effectiveness
+        }
+    }
+    return minEffectiveness
 }
